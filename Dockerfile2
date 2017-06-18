@@ -1,0 +1,8 @@
+FROM neighbour
+
+RUN rm -rf /src
+COPY . /src
+RUN make package
+
+CMD ["java", "-jar", "/src/target/neighbour-server-1.0.0.jar"]
+
