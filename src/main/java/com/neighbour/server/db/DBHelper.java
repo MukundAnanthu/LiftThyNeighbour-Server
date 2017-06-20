@@ -1,6 +1,7 @@
 package com.neighbour.server.db;
 
 import com.neighbour.server.model.db.LocationModel;
+import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.SignUp;
 import com.neighbour.server.util.DBException;
 import com.neighbour.server.util.PasswordHelper;
@@ -111,7 +112,7 @@ public class DBHelper {
     public static Integer addUser(SignUp user) throws DBException {
         try {
             String sqlString = "INSERT INTO user "
-                    + "(userName, password, apartmentId, flatNumber, contactNumber, emailId, vehicleNumber) "
+                    + "(userName, password, apartmentId, flatNumber, contactNumber, email, vehicleNumber) "
                     + "VALUES " + "(?, ?, ?, ?, ?, ?, ?);";
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setString(1, user.getUserName());
@@ -143,6 +144,33 @@ public class DBHelper {
             } else {
                 return Boolean.TRUE;
             }
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static User getUser(String userName) throws DBException {
+        try {
+            String sqlString = "select * from user where userName=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setString(1, userName);
+            ResultSet rs = stmt.executeQuery();
+
+            rs.next();
+            User user = new User();
+            user.setPendingStatus(rs.getInt("pendingStatus"));
+            user.setToken(rs.getString("token"));
+            user.setUserId(rs.getInt("userId"));
+            user.setUserName(rs.getString("userName"));
+            user.setPassword(rs.getString("password"));
+            user.setApartmentId(rs.getInt("apartmentId"));
+            user.setContactNumber(rs.getString("contactNumber"));
+            user.setFlatNumber(rs.getString("flatNumber"));
+            user.setEmail(rs.getString("email"));
+            user.setVehicleNumber(rs.getString("vehicleNumber"));
+
+            return user;
+
         } catch (SQLException e) {
             throw new DBException(e);
         }

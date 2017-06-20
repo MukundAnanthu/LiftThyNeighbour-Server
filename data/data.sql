@@ -11,7 +11,7 @@ CREATE TABLE user (
 `apartmentId` INT NOT NULL,
 `flatNumber` VARCHAR(100) NOT NULL,
 `contactNumber` VARCHAR(100) NOT NULL,
-`emailId` VARCHAR(100) NOT NULL,
+`email` VARCHAR(100) NOT NULL,
 `vehicleNumber` VARCHAR(100) NOT NULL,
 `pendingStatus` INT NOT NULL DEFAULT 1
 );
