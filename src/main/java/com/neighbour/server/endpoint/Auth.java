@@ -1,6 +1,6 @@
 package com.neighbour.server.endpoint;
 
-import com.neighbour.server.model.LoginDetails;
+import com.neighbour.server.model.rest.LoginDetails;
 import com.neighbour.server.util.PasswordHelper;
 import com.neighbour.server.util.TokenChecker;
 import java.util.HashMap;

@@ -12,8 +12,8 @@ CREATE TABLE user (
 `flatNumber` VARCHAR(100) NOT NULL,
 `contactNumber` VARCHAR(100) NOT NULL,
 `emailId` VARCHAR(100) NOT NULL,
-`vehicleNumbers` VARCHAR(100) NOT NULL,
-`pendingStatus` INT NOT NULL
+`vehicleNumber` VARCHAR(100) NOT NULL,
+`pendingStatus` INT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE admin (

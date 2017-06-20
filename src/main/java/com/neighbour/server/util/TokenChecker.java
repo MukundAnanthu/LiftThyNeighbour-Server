@@ -6,6 +6,7 @@ import java.util.Objects;
  * @author ajithpandel
  */
 public class TokenChecker {
+
     private static String token;
 
     public static Boolean check(String toCheck) {

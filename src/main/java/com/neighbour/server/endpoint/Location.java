@@ -1,7 +1,7 @@
 package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
-import com.neighbour.server.model.LocationModel;
+import com.neighbour.server.model.db.LocationModel;
 import com.neighbour.server.util.DBException;
 import java.util.ArrayList;
 import java.util.HashMap;

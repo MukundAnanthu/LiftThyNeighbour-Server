@@ -1,21 +1,23 @@
 package com.neighbour.server.db;
 
-import com.neighbour.server.endpoint.Location;
-import com.neighbour.server.model.LocationModel;
+import com.neighbour.server.model.db.LocationModel;
+import com.neighbour.server.model.rest.SignUp;
 import com.neighbour.server.util.DBException;
+import com.neighbour.server.util.PasswordHelper;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author ajithpandel
  */
 public class DBHelper {
+
     private static Connection conn;
 
     private static String getConnectionString() {
@@ -61,6 +63,17 @@ public class DBHelper {
         }
     }
 
+    public static PreparedStatement getPreparedStatement(String sql) throws DBException {
+        try {
+            Connection conn = getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            return stmt;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+
     public static String pingDb() throws DBException {
         try {
             Statement stmt = getStatement();
@@ -90,6 +103,46 @@ public class DBHelper {
             }
 
             return list;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static Integer addUser(SignUp user) throws DBException {
+        try {
+            String sqlString = "INSERT INTO user "
+                    + "(userName, password, apartmentId, flatNumber, contactNumber, emailId, vehicleNumber) "
+                    + "VALUES " + "(?, ?, ?, ?, ?, ?, ?);";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setString(1, user.getUserName());
+            stmt.setString(2, PasswordHelper.hashPassword(user.getPassword()));
+            stmt.setInt(3, user.getApartmentId());
+            stmt.setString(4, user.getFlatNumber());
+            stmt.setString(5, user.getContactNumber());
+            stmt.setString(6, user.getEmail());
+            stmt.setString(7, user.getVehicleNumber());
+
+            return stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static Boolean checkUserExists(SignUp user) throws DBException {
+        try {
+            String sqlString = "select count(*) as count from user where userName=? or contactNumber=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setString(1, user.getUserName());
+            stmt.setString(2, user.getContactNumber());
+
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            Integer count = rs.getInt("count");
+            if (count == 0) {
+                return Boolean.FALSE;
+            } else {
+                return Boolean.TRUE;
+            }
         } catch (SQLException e) {
             throw new DBException(e);
         }

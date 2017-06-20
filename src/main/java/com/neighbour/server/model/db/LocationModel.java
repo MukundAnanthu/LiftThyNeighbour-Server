@@ -1,4 +1,4 @@
-package com.neighbour.server.model;
+package com.neighbour.server.model.db;
 
 import java.util.Objects;
 
@@ -6,6 +6,7 @@ import java.util.Objects;
  * @author ajithpandel
  */
 public class LocationModel {
+
     public static final String LOCATION_ID = "locationId";
     public static final String LOCATION_NAME = "locationName";
     public static final String LOCATION_TYPE = "locationType";

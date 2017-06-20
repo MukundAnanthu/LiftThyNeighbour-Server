@@ -1,4 +1,4 @@
-package com.neighbour.server.model;
+package com.neighbour.server.model.rest;
 
 /**
  * @author ajithpandel
