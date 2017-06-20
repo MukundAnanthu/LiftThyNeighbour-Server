@@ -4,6 +4,7 @@ import com.neighbour.server.model.db.Admin;
 import com.neighbour.server.model.db.LocationModel;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.SignUp;
+import com.neighbour.server.model.rest.Tenant;
 import com.neighbour.server.model.rest.UserType;
 import com.neighbour.server.util.DBException;
 import com.neighbour.server.util.PasswordHelper;
@@ -182,11 +183,68 @@ public class DBHelper {
         }
     }
 
+    public static User getUser(Integer userId) throws DBException {
+        try {
+            String sqlString = "select * from user where userId=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+
+            Boolean a = rs.next();
+            if (!a) {
+                return null;
+            }
+
+            User user = new User();
+            user.setPendingStatus(rs.getInt("pendingStatus"));
+            user.setToken(rs.getString("token"));
+            user.setUserId(rs.getInt("userId"));
+            user.setUserName(rs.getString("userName"));
+            user.setPassword(rs.getString("password"));
+            user.setApartmentId(rs.getInt("apartmentId"));
+            user.setContactNumber(rs.getString("contactNumber"));
+            user.setFlatNumber(rs.getString("flatNumber"));
+            user.setEmail(rs.getString("email"));
+            user.setVehicleNumber(rs.getString("vehicleNumber"));
+
+            return user;
+
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
     public static Admin getAdminUser(String adminName) throws DBException {
         try {
             String sqlString = "select * from admin where adminName=?;";
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setString(1, adminName);
+            ResultSet rs = stmt.executeQuery();
+
+
+            Boolean a = rs.next();
+            if (!a) {
+                return null;
+            }
+            Admin admin = new Admin();
+            admin.setAdminId(rs.getInt("adminId"));
+            admin.setAdminName(rs.getString("adminName"));
+            admin.setPassword(rs.getString("password"));
+            admin.setToken(rs.getString("token"));
+            admin.setLocationId(rs.getInt("locationId"));
+
+            return admin;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+
+    }
+
+    public static Admin getAdminUser(Integer adminId) throws DBException {
+        try {
+            String sqlString = "select * from admin where adminId=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, adminId);
             ResultSet rs = stmt.executeQuery();
 
 
@@ -218,6 +276,61 @@ public class DBHelper {
             stmt.setString(1, token);
             stmt.setInt(2, userId);
             stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static Boolean validateToken(Integer userId, String token, UserType type) throws DBException {
+        String hashedToken = "";
+        switch (type) {
+
+            case ADMIN:
+                Admin admin = DBHelper.getAdminUser(userId);
+                if (admin == null) {
+                    throw new DBException("Invalid user");
+                }
+                hashedToken = admin.getToken();
+                break;
+            case USER:
+                User user = DBHelper.getUser(userId);
+                if (user == null) {
+                    throw new DBException("Invalid user");
+                }
+                hashedToken = user.getToken();
+                break;
+        }
+
+        if (PasswordHelper.checkPassword(token, hashedToken)) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.FALSE;
+        }
+    }
+
+    public static List<Tenant> getTenants(Integer userId) throws DBException {
+        Admin admin = getAdminUser(userId);
+
+        try {
+            String sqlString = "select * from user where apartmentId=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, admin.getLocationId());
+            ResultSet rs = stmt.executeQuery();
+
+            List<Tenant> list = new ArrayList<>();
+            while (rs.next()) {
+                Tenant tenant = new Tenant();
+                tenant.setUserId(rs.getInt("userId"));
+                tenant.setUserName(rs.getString("userName"));
+                tenant.setFlatNumber(rs.getString("flatNumber"));
+                tenant.setVehicleNumber(rs.getString("vehicleNumber"));
+                tenant.setContactNumber(rs.getString("contactNumber"));
+                tenant.setEmail(rs.getString("email"));
+                list.add(tenant);
+            }
+
+            return list;
+
         } catch (SQLException e) {
             throw new DBException(e);
         }
