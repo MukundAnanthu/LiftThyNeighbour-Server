@@ -1,5 +1,6 @@
 package com.neighbour.server;
 
+import com.neighbour.server.db.DBHelper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
