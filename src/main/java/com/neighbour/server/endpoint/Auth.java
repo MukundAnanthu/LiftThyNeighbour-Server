@@ -1,6 +1,7 @@
 package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
+import com.neighbour.server.model.db.Admin;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.LoginDetails;
 import com.neighbour.server.util.DBException;
@@ -33,15 +34,35 @@ public class Auth {
 
     private Map<String, Object> auth(LoginDetails details) throws DBException {
         Map<String, Object> map = new HashMap<>();
-        User user = DBHelper.getUser(details.getUserName());
-        String hashedPassword = user.getPassword();
+        String hashedPassword = "";
+        Integer userId = null;
+        switch (details.getUserType()) {
+
+            case ADMIN:
+                Admin admin = DBHelper.getAdminUser(details.getUserName());
+                if (admin == null) {
+                    throw new DBException("Invalid user");
+                }
+                hashedPassword = admin.getPassword();
+                userId = admin.getAdminId();
+                break;
+            case USER:
+                User user = DBHelper.getUser(details.getUserName());
+                if (user == null) {
+                    throw new DBException("Invalid user");
+                }
+                hashedPassword = user.getPassword();
+                userId = user.getUserId();
+                break;
+        }
+
         if (PasswordHelper.checkPassword(details.getPassword(), hashedPassword)) {
             String token = generateToken();
-            // Update db
+            DBHelper.updateToken(userId, PasswordHelper.hashPassword(token), details.getUserType());
             TokenChecker.setToken(token);
             map.put(RESULT, SUCCESS_RESULT);
             map.put(TOKEN, token);
-            map.put(USERID, user.getUserId());
+            map.put(USERID, userId);
         } else {
             map.put(RESULT, FAILURE_RESULT);
         }
@@ -54,6 +75,7 @@ public class Auth {
             return auth(details);
         } catch (DBException e) {
             Map<String, Object> map = new HashMap<>();
+            map.put("result", "FAILED");
             map.put("message", e.getMessage());
             return map;
         }

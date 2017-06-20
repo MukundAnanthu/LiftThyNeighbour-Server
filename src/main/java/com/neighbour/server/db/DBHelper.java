@@ -1,8 +1,10 @@
 package com.neighbour.server.db;
 
+import com.neighbour.server.model.db.Admin;
 import com.neighbour.server.model.db.LocationModel;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.SignUp;
+import com.neighbour.server.model.rest.UserType;
 import com.neighbour.server.util.DBException;
 import com.neighbour.server.util.PasswordHelper;
 import java.sql.Connection;
@@ -156,7 +158,11 @@ public class DBHelper {
             stmt.setString(1, userName);
             ResultSet rs = stmt.executeQuery();
 
-            rs.next();
+            Boolean a = rs.next();
+            if (!a) {
+                return null;
+            }
+
             User user = new User();
             user.setPendingStatus(rs.getInt("pendingStatus"));
             user.setToken(rs.getString("token"));
@@ -171,6 +177,47 @@ public class DBHelper {
 
             return user;
 
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static Admin getAdminUser(String adminName) throws DBException {
+        try {
+            String sqlString = "select * from admin where adminName=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setString(1, adminName);
+            ResultSet rs = stmt.executeQuery();
+
+
+            Boolean a = rs.next();
+            if (!a) {
+                return null;
+            }
+            Admin admin = new Admin();
+            admin.setAdminId(rs.getInt("adminId"));
+            admin.setAdminName(rs.getString("adminName"));
+            admin.setPassword(rs.getString("password"));
+            admin.setToken(rs.getString("token"));
+            admin.setLocationId(rs.getInt("locationId"));
+
+            return admin;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+
+    }
+
+    public static void updateToken(Integer userId, String token, UserType type) throws DBException{
+        try {
+            String sqlString = "update user set token=? where userId=?;";
+            if (type == UserType.ADMIN) {
+                sqlString = "update admin set token=? where adminId=?;";
+            }
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setString(1, token);
+            stmt.setInt(2, userId);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DBException(e);
         }

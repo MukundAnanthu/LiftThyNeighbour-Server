@@ -24,6 +24,12 @@ CREATE TABLE admin (
 `locationId` INT NOT NULL
 );
 
+-- Password is password123
+INSERT INTO admin (adminName, password, locationId) VALUES ("admin1", "$2a$12$cQWa6z0gbZmx0h69e22Fn.BY6UtyeUaak2vSiXUZNtJSin0Zbrgne", 1);
+INSERT INTO admin (adminName, password, locationId) VALUES ("admin2", "$2a$12$cQWa6z0gbZmx0h69e22Fn.BY6UtyeUaak2vSiXUZNtJSin0Zbrgne", 2);
+INSERT INTO admin (adminName, password, locationId) VALUES ("admin3", "$2a$12$cQWa6z0gbZmx0h69e22Fn.BY6UtyeUaak2vSiXUZNtJSin0Zbrgne", 3);
+INSERT INTO admin (adminName, password, locationId) VALUES ("admin4", "$2a$12$cQWa6z0gbZmx0h69e22Fn.BY6UtyeUaak2vSiXUZNtJSin0Zbrgne", 4);
+
 CREATE TABLE location (
 `locationId` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 `locationName` VARCHAR(100) NOT NULL,
