@@ -16,6 +16,8 @@ CREATE TABLE user (
 `pendingStatus` INT NOT NULL DEFAULT 1
 );
 
+-- Password is passw
+INSERT INTO `user` VALUES (1,'normal1','$2a$12$.j4ViduPIClhj1ul7zVfduOS8n4luaw3dzLoLvr9IN7OP8B/qQHPS',NULL,1,'B','2381225a','a@b.c','someVehicleNumber',1);
 CREATE TABLE admin (
 `adminId` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 `adminName` VARCHAR(100) NOT NULL,
