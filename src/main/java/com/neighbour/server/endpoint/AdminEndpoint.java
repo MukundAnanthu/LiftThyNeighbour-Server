@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminEndpoint {
 
     @RequestMapping(value = "/api/getTenants", method = RequestMethod.POST)
-    public Map<String, Object> login(@RequestBody Map<String, Object> body) {
+    public Map<String, Object> getTenants(@RequestBody Map<String, Object> body) {
         Map<String, Object> map = new HashMap<>();
 
         Integer userId = (Integer) body.get("userId");
@@ -37,7 +37,7 @@ public class AdminEndpoint {
                 map.put("message", "Invalid token");
                 return map;
             }
-            List<Tenant> list = DBHelper.getTenants(userId);
+            List<Tenant> list = DBHelper.getTenants(userId, false);
             map.put("tenantList", list);
             return map;
         } catch (DBException e) {
@@ -45,4 +45,33 @@ public class AdminEndpoint {
             return map;
         }
     }
+
+    @RequestMapping(value = "/api/pendingApprovalList", method = RequestMethod.POST)
+    public Map<String, Object> getPending(@RequestBody Map<String, Object> body) {
+        Map<String, Object> map = new HashMap<>();
+
+        Integer userId = (Integer) body.get("userId");
+        String token = (String)body.get("token");
+        if (userId == null || token == null) {
+            map.put("message", "userId or token is missing");
+            return map;
+        }
+
+        Boolean a;
+        try {
+            a = DBHelper.validateToken(userId, token, UserType.ADMIN);
+            if (!a) {
+                map.put("message", "Invalid token");
+                return map;
+            }
+            List<Tenant> list = DBHelper.getTenants(userId, true);
+            map.put("pendingList", list);
+            return map;
+        } catch (DBException e) {
+            map.put("message", e.getMessage());
+            return map;
+        }
+    }
+
+
 }

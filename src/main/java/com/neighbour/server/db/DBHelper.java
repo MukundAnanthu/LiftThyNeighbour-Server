@@ -308,11 +308,14 @@ public class DBHelper {
         }
     }
 
-    public static List<Tenant> getTenants(Integer userId) throws DBException {
+    public static List<Tenant> getTenants(Integer userId, Boolean pending) throws DBException {
         Admin admin = getAdminUser(userId);
 
         try {
             String sqlString = "select * from user where apartmentId=?;";
+            if (pending) {
+                sqlString = "select * from user where apartmentId=? and pendingStatus=1;"
+            }
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setInt(1, admin.getLocationId());
             ResultSet rs = stmt.executeQuery();
