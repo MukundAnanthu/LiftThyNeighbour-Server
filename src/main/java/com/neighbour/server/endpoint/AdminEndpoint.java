@@ -99,7 +99,7 @@ public class AdminEndpoint {
             } else if ("no".equals(approved)){
                 ap = Boolean.FALSE;
             } else {
-                throw new DBException("Wrong value for approved. [yes, no]")
+                throw new DBException("Wrong value for approved. [yes, no]");
             }
 
             User user = DBHelper.getUser(id);
