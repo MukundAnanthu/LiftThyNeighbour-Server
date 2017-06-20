@@ -314,7 +314,7 @@ public class DBHelper {
         try {
             String sqlString = "select * from user where apartmentId=?;";
             if (pending) {
-                sqlString = "select * from user where apartmentId=? and pendingStatus=1;"
+                sqlString = "select * from user where apartmentId=? and pendingStatus=1;";
             }
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setInt(1, admin.getLocationId());
