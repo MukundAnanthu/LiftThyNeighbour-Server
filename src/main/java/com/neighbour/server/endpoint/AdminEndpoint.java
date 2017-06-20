@@ -1,6 +1,7 @@
 package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
+import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.LoginDetails;
 import com.neighbour.server.model.rest.Tenant;
 import com.neighbour.server.model.rest.UserType;
@@ -71,6 +72,53 @@ public class AdminEndpoint {
             map.put("message", e.getMessage());
             return map;
         }
+    }
+
+    @RequestMapping(value = "/api/approve", method = RequestMethod.POST)
+    public Map<String, Object> approve(@RequestBody Map<String, Object> body) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            Integer userId = (Integer) body.get("userId");
+            String token = (String)body.get("token");
+            if (userId == null || token == null) {
+                throw new DBException("userId or token is missing");
+            }
+
+            Boolean a;
+
+            a = DBHelper.validateToken(userId, token, UserType.ADMIN);
+            if (!a) {
+                throw new DBException("Invalid token");
+            }
+
+            Integer id = (Integer)map.get("userIdToApprove");
+            String approved = (String)map.get("approved");
+            Boolean ap;
+            if ("yes".equals(approved)) {
+                ap = Boolean.TRUE;
+            } else if ("no".equals(approved)){
+                ap = Boolean.FALSE;
+            } else {
+                throw new DBException("Wrong value for approved. [yes, no]")
+            }
+
+            User user = DBHelper.getUser(id);
+            if (user == null) {
+                throw new DBException("Invalid user");
+            }
+
+            if (ap) {
+                DBHelper.clearPendingStatus(id);
+            } else {
+                DBHelper.deleteUser(id);
+            }
+            map.put("message", "Operation completed successfully");
+        } catch (DBException e) {
+
+            map.put("message", e.getMessage());
+        }
+
+        return map;
     }
 
 

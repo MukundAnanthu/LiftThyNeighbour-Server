@@ -338,4 +338,26 @@ public class DBHelper {
             throw new DBException(e);
         }
     }
+
+    public static void clearPendingStatus(Integer userId) throws DBException {
+        try {
+            String sqlString = "UPDATE user set pendingStatus=0 where userId=?";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
+    public static void deleteUser(Integer userId) throws DBException {
+        try {
+            String sqlString = "DELETE FROM user where userId=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
+    }
 }
