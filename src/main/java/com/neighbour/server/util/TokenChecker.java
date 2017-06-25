@@ -35,6 +35,10 @@ public class TokenChecker {
 
     public static Boolean validateUser(BasicAuth auth, Boolean isAdmin) throws DBException {
         String token;
+        if (auth == null || auth.getUserId() == null || auth.getToken() == null) {
+            throw new DBException("Empty auth details. userId and/or token missing");
+        }
+
         if (isAdmin) {
             Admin admin =  DBHelper.getAdminUser(auth.getUserId());
             if (admin == null) {
