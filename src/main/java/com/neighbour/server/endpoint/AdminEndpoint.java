@@ -91,8 +91,8 @@ public class AdminEndpoint {
                 throw new DBException("Invalid token");
             }
 
-            Integer id = (Integer)map.get("userIdToApprove");
-            String approved = (String)map.get("approved");
+            Integer id = (Integer)body.get("userIdToApprove");
+            String approved = (String)body.get("approved");
             Boolean ap;
             if ("yes".equals(approved)) {
                 ap = Boolean.TRUE;

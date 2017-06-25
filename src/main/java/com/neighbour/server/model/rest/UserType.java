@@ -16,10 +16,6 @@ public enum UserType {
         return this.type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public UserType fromString(String type) {
         for (UserType t : UserType.values()) {
             if (t.type.equalsIgnoreCase(type)) {

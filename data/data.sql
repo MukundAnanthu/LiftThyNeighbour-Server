@@ -53,7 +53,8 @@ CREATE TABLE `rideOffer`
 	`sourceId` INT NOT NULL,
 	`destinationId` INT NOT NULL,
 	`departureTime` VARCHAR(10),
-	`numberOfSeats` INT NOT NULL
+	`numberOfSeats` INT NOT NULL,
+	`finishedRide` INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE `rideTaker`

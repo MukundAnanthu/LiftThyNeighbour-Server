@@ -1,10 +1,17 @@
 package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
+import com.neighbour.server.model.db.LocationModel;
+import com.neighbour.server.model.rest.Ride;
 import com.neighbour.server.model.rest.SignUp;
 import com.neighbour.server.util.DBException;
+import com.neighbour.server.util.TokenChecker;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +55,118 @@ public class NormalUser {
             map.put("message", e.getMessage());
         }
 
+        return map;
+    }
+
+    private String validateSrcAndDest(Ride ride) throws DBException {
+        List<LocationModel> locationList = DBHelper.getLocationList();
+
+        LocationModel source = null;
+        LocationModel dest = null;
+        for (LocationModel location : locationList) {
+            if (Objects.equals(ride.getSourceId(), location.getLocationId())) {
+                source = location;
+            } else if (Objects.equals(ride.getDestinationId(), location.getLocationId())) {
+                dest = location;
+            }
+        }
+
+        if (source == null || dest == null) {
+            return "Invalid source or destination";
+        }
+
+        if (!Objects.equals(source.getLocationType(), ride.getSourceType())) {
+            return "Invalid source type";
+        }
+
+        if (Objects.equals(dest.getLocationType(), source.getLocationType())) {
+            return "Source and destination type should be different";
+        }
+
+        return null;
+    }
+
+    private String validateTime(String timestamp) {
+        // Assumes timestamp is time in seconds in utc
+        Long time = Long.valueOf(timestamp);
+        Long now = Instant.now().getEpochSecond();
+
+        // One hour check
+        if (!(time - now >= 60 * 60)) {
+            return "Ride should be offered or taken atleast one hour before";
+        }
+
+        return null;
+    }
+
+    private String validateRideOffer(Ride ride) throws DBException {
+        if (ride.getSourceType() == null || ride.getSourceId() == null || ride.getDestinationId() == null
+                || ride.getTimestamp() == null || ride.getType() == null || ride.getNumberOfSeats() == null) {
+            return "Invalid values";
+        }
+        if (!TokenChecker.validateUser(ride)) {
+            return "Invalid auth";
+        }
+        String temp = validateSrcAndDest(ride);
+        if (temp != null) {
+            return temp;
+        }
+        temp = validateTime(ride.getTimestamp());
+
+        if (ride.getNumberOfSeats() < 1 || ride.getNumberOfSeats() > 20) {
+            return "Invalid number of seats";
+        }
+
+        return null;
+    }
+
+    private String validateRideTaking(Ride ride) throws DBException {
+
+        if (ride.getSourceType() == null || ride.getSourceId() == null || ride.getDestinationId() == null
+                || ride.getTimestamp() == null || ride.getType() == null) {
+            return "Invalid values";
+        }
+
+        if (!TokenChecker.validateUser(ride)) {
+            return "Invalid auth";
+        }
+
+        String temp = validateSrcAndDest(ride);
+        if (temp != null) {
+            return temp;
+        }
+
+        temp = validateTime(ride.getTimestamp());
+        if (temp != null) {
+            return temp;
+        }
+
+        return null;
+    }
+
+    @RequestMapping(value = "/api/ride", method = RequestMethod.POST)
+    public Map<String, Object> ride(@RequestBody Ride body) throws DBException {
+        Map<String, Object> map = new HashMap<>();
+
+        switch (body.getType()) {
+            case OFFER:
+                String ret = validateRideOffer(body);
+                if (ret != null) {
+                    map.put("result", "FAILURE");
+                    map.put("message", ret);
+                    return map;
+                }
+
+                DBHelper.addRide(body);
+                map.put("result", "SUCCESS");
+                map.put("message", "Ride added successfully");
+                return map;
+            case TAKE:
+                break;
+            default:
+                // error
+        }
+        map.put("body", body);
         return map;
     }
 }

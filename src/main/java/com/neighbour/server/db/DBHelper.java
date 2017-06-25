@@ -3,6 +3,7 @@ package com.neighbour.server.db;
 import com.neighbour.server.model.db.Admin;
 import com.neighbour.server.model.db.LocationModel;
 import com.neighbour.server.model.db.User;
+import com.neighbour.server.model.rest.Ride;
 import com.neighbour.server.model.rest.SignUp;
 import com.neighbour.server.model.rest.Tenant;
 import com.neighbour.server.model.rest.UserType;
@@ -360,4 +361,25 @@ public class DBHelper {
             throw new DBException(e.getMessage());
         }
     }
+
+    public static void addRide(Ride ride) throws DBException {
+        try {
+            String sqlString = "INSERT INTO rideOffer "
+                    + "(driverUserId, sourceType, sourceId, destinationId, departureTime, numberOfSeats) "
+                    + "VALUES "
+                    + "(?, ?, ?, ?, ?, ?)";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, ride.getUserId());
+            stmt.setInt(2, ride.getSourceType());
+            stmt.setInt(3, ride.getSourceId());
+            stmt.setInt(4, ride.getDestinationId());
+            stmt.setString(5, ride.getTimestamp());
+            stmt.setInt(6, ride.getNumberOfSeats());
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
+    }
+
 }
