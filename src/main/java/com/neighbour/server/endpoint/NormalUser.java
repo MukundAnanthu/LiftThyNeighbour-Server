@@ -2,12 +2,13 @@ package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
 import com.neighbour.server.model.db.LocationModel;
+import com.neighbour.server.model.db.RideModel;
+import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.Ride;
 import com.neighbour.server.model.rest.SignUp;
 import com.neighbour.server.util.DBException;
 import com.neighbour.server.util.TokenChecker;
 import java.time.Instant;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,29 +145,137 @@ public class NormalUser {
         return null;
     }
 
-    @RequestMapping(value = "/api/ride", method = RequestMethod.POST)
-    public Map<String, Object> ride(@RequestBody Ride body) throws DBException {
-        Map<String, Object> map = new HashMap<>();
+    private Boolean checkValidLocations(RideModel driver, Ride taker, List<LocationModel> llist) {
+        Integer dSrcId = driver.getSourceId();
+        Integer dDestId = driver.getDestinationId();
+        Integer tSrcId = taker.getSourceId();
+        Integer tDestId = taker.getDestinationId();
 
-        switch (body.getType()) {
-            case OFFER:
-                String ret = validateRideOffer(body);
-                if (ret != null) {
-                    map.put("result", "FAILURE");
-                    map.put("message", ret);
-                    return map;
-                }
+        Integer dSrcDist = null, dDestDist = null, tSrcDist = null, tDestDist = null;
+        for (LocationModel location : llist) {
+            Integer id = location.getLocationId();
+            Integer dist = location.getDistance();
+            if (id == dSrcId) {
+                dSrcDist = dist;
+            }
 
-                DBHelper.addRide(body);
-                map.put("result", "SUCCESS");
-                map.put("message", "Ride added successfully");
-                return map;
-            case TAKE:
-                break;
-            default:
-                // error
+            if (id == dDestId) {
+                dDestDist = dist;
+            }
+
+            if (id == tSrcId) {
+                tSrcDist = dist;
+            }
+
+            if (id == tDestId) {
+                tDestDist = dist;
+            }
         }
-        map.put("body", body);
+        // driver source <= ride source <= ride dest <= driver dest
+        if (dSrcDist == null || dDestDist == null || tSrcDist == null || tDestDist == null) {
+            return Boolean.FALSE;
+        }
+
+        if (dSrcDist <= tSrcDist && tSrcDist <= tDestDist && tDestDist <= dDestDist) {
+            return Boolean.TRUE;
+        }
+
+        if (dSrcDist >= tSrcDist && tSrcDist >= tDestDist && tDestDist >= dDestDist) {
+            return Boolean.TRUE;
+        }
+
+        return Boolean.FALSE;
+    }
+
+    private Boolean checkValidTime(String driverTime, String takerTime) {
+        Long d = Long.valueOf(driverTime);
+        Long t = Long.valueOf(takerTime);
+
+        Long interval = 15 * 60L; // 15 minutes
+
+        Long diff = d - t;
+        if (diff < 0) {
+            diff = -diff;
+        }
+
+        if (diff < interval) {
+            return Boolean.TRUE;
+        } else {
+            return Boolean.FALSE;
+        }
+    }
+
+    private Map<String, Object> takeRide(Ride ride) throws DBException {
+        Map<String, Object> map = new HashMap<>();
+        List<RideModel> rides = DBHelper.getRides();
+        List<LocationModel> locationList = DBHelper.getLocationList();
+        for (RideModel r : rides) {
+            if (!checkValidLocations(r, ride, locationList)) {
+                continue;
+            }
+
+            if (!checkValidTime(r.getDepartureTime(), ride.getTimestamp())) {
+                continue;
+            }
+
+            Integer available = DBHelper.getPassengerCount(r.getRideId());
+            if (available < r.getNumberOfSeats()) {
+                // Done!
+                DBHelper.addPassenger(r.getRideId(), ride.getUserId());
+
+                map.put("result", "SUCCESS");
+                User u = DBHelper.getUser(r.getDriverUserId());
+                if (u == null) {
+                    throw new DBException("Unexpected error");
+                }
+                map.put("driverName", u.getUserName());
+                map.put("contactNumber", u.getContactNumber());
+                map.put("vehicleNumber", u.getVehicleNumber());
+                map.put("departureTime", r.getDepartureTime());
+                return map;
+            }
+        }
+        map.put("result", "FAILURE");
+        map.put("message", "No available rides");
+
+        return map;
+    }
+
+    @RequestMapping(value = "/api/ride", method = RequestMethod.POST)
+    public Map<String, Object> ride(@RequestBody Ride body) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            String ret;
+            switch (body.getType()) {
+                case OFFER:
+                    ret = validateRideOffer(body);
+                    if (ret != null) {
+                        map.put("result", "FAILURE");
+                        map.put("message", ret);
+                        return map;
+                    }
+
+                    DBHelper.addRide(body);
+                    map.put("result", "SUCCESS");
+                    map.put("message", "Ride added successfully");
+                    return map;
+                case TAKE:
+                    ret = validateRideTaking(body);
+                    if (ret != null) {
+                        map.put("result", "FAILURE");
+                        map.put("message", ret);
+                        return map;
+                    }
+                    return takeRide(body);
+                default:
+                    map.put("result", "FAILURE");
+                    map.put("message", "Wrong ride type");
+                    return map;
+            }
+        } catch (DBException e) {
+            map.put("result", "FAILURE");
+            map.put("message", e.getMessage());
+        }
         return map;
     }
 }

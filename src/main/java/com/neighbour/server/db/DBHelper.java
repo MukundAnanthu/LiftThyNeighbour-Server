@@ -2,6 +2,7 @@ package com.neighbour.server.db;
 
 import com.neighbour.server.model.db.Admin;
 import com.neighbour.server.model.db.LocationModel;
+import com.neighbour.server.model.db.RideModel;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.Ride;
 import com.neighbour.server.model.rest.SignUp;
@@ -380,6 +381,53 @@ public class DBHelper {
         } catch (SQLException e) {
             throw new DBException(e.getMessage());
         }
+    }
+
+    public static List<RideModel> getRides() throws DBException {
+        try {
+            String sqlString = "SELECT * from rideOffer where finishedRide=0;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            ResultSet rs = stmt.executeQuery();
+
+            List<RideModel> list = new ArrayList<>();
+            while (rs.next()) {
+                RideModel ride = new RideModel();
+                ride.setRideId(rs.getInt("rideId"));
+                ride.setDriverUserId(rs.getInt("driverUserId"));
+                ride.setSourceType(rs.getInt("sourceType"));
+                ride.setSourceId(rs.getInt("sourceId"));
+                ride.setDestinationId(rs.getInt("destinationId"));
+                ride.setDepartureTime(rs.getString("departureTime"));
+                ride.setNumberOfSeats(rs.getInt("numberOfSeats"));
+                ride.setFinishedRide(rs.getInt("finishedRide"));
+                list.add(ride);
+            }
+
+            return list;
+
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static Integer getPassengerCount(Integer rideId) throws DBException {
+        try {
+            String sqlString = "SELECT COUNT(*) as COUNT from rideTaker where rideId=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, rideId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("COUNT");
+            } else {
+                return 0;
+            }
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static void addPassenger(Integer rideId, Integer takerId) {
+
     }
 
 }

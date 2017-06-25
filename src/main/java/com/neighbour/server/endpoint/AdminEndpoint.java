@@ -2,10 +2,12 @@ package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
 import com.neighbour.server.model.db.User;
+import com.neighbour.server.model.rest.DeleteProfile;
 import com.neighbour.server.model.rest.LoginDetails;
 import com.neighbour.server.model.rest.Tenant;
 import com.neighbour.server.model.rest.UserType;
 import com.neighbour.server.util.DBException;
+import com.neighbour.server.util.TokenChecker;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,5 +123,23 @@ public class AdminEndpoint {
         return map;
     }
 
+    @RequestMapping(value = "/api/deleteProfile", method = RequestMethod.POST)
+    public Map<String, Object> deleteProfile(@RequestBody DeleteProfile body) {
+        Map<String, Object> map = new HashMap<>();
+        try {
+            if (!TokenChecker.validateUser(body, true)) {
+                map.put("result", "FAILURE");
+                map.put("message", "Invalid auth");
+            } else {
+                DBHelper.deleteUser(body.getUserIdToDelete());
+                map.put("result", "SUCCESS");
+                map.put("message", "Successfully deleted");
+            }
+        } catch (DBException e) {
+            map.put("result", "FAILURE");
+            map.put("message", e.getMessage());
+        }
+        return map;
+    }
 
 }

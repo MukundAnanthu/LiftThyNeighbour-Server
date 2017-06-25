@@ -1,6 +1,7 @@
 package com.neighbour.server.util;
 
 import com.neighbour.server.db.DBHelper;
+import com.neighbour.server.model.db.Admin;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.BasicAuth;
 import java.util.Objects;
@@ -29,8 +30,28 @@ public class TokenChecker {
     }
 
     public static Boolean validateUser(BasicAuth auth) throws DBException {
-        User user = DBHelper.getUser(auth.getUserId());
-        if (user != null && PasswordHelper.checkPassword(auth.getToken(), user.getToken())) {
+        return validateUser(auth, false);
+    }
+
+    public static Boolean validateUser(BasicAuth auth, Boolean isAdmin) throws DBException {
+        String token;
+        if (isAdmin) {
+            Admin admin =  DBHelper.getAdminUser(auth.getUserId());
+            if (admin == null) {
+                return Boolean.FALSE;
+            } else {
+                token = admin.getToken();
+            }
+        } else {
+            User user = DBHelper.getUser(auth.getUserId());
+            if (user == null) {
+                return Boolean.FALSE;
+            } else {
+                token = user.getToken();
+            }
+        }
+
+        if (PasswordHelper.checkPassword(auth.getToken(), token)) {
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;
