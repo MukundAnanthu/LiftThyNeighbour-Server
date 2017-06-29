@@ -60,6 +60,7 @@ CREATE TABLE `rideOffer`
 CREATE TABLE `rideTaker`
 (
 	`rideId` INT NOT NULL,
-	`takerUserId` INT NOT NULL
+	`takerUserId` INT NOT NULL,
+	`techParkId` INT NOT NULL
 );
 

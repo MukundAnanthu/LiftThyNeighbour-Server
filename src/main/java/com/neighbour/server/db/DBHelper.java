@@ -369,11 +369,21 @@ public class DBHelper {
                     + "(driverUserId, sourceType, sourceId, destinationId, departureTime, numberOfSeats) "
                     + "VALUES "
                     + "(?, ?, ?, ?, ?, ?)";
+
+            User user = DBHelper.getUser(ride.getUserId());
+            if (user == null) {
+                throw new DBException("Invalid userId");
+            }
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setInt(1, ride.getUserId());
             stmt.setInt(2, ride.getSourceType());
-            stmt.setInt(3, ride.getSourceId());
-            stmt.setInt(4, ride.getDestinationId());
+            if (ride.getSourceType() == LocationModel.APARTMENT) {
+                stmt.setInt(3, user.getApartmentId());
+                stmt.setInt(4, ride.getTechParkId());
+            } else {
+                stmt.setInt(3, ride.getTechParkId());
+                stmt.setInt(4, user.getApartmentId());
+            }
             stmt.setString(5, ride.getTimestamp());
             stmt.setInt(6, ride.getNumberOfSeats());
 
@@ -426,8 +436,21 @@ public class DBHelper {
         }
     }
 
-    public static void addPassenger(Integer rideId, Integer takerId) {
+    public static void addPassenger(Integer rideId, Integer takerId, Integer techParkId) throws DBException {
+        try {
+            String sqlString = "INSERT INTO rideTaker "
+                    + "(rideId, takerUserId, techParkId) "
+                    + "VALUES "
+                    + "(?, ?, ?)";
 
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, rideId);
+            stmt.setInt(2, takerId);
+            stmt.setInt(3, techParkId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DBException(e.getMessage());
+        }
     }
 
 }

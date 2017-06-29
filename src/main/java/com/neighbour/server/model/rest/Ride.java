@@ -7,8 +7,7 @@ import java.util.Objects;
  */
 public class Ride extends BasicAuth {
     private Integer sourceType;
-    private Integer sourceId;
-    private Integer destinationId;
+    private Integer techParkId;
     private String timestamp;
     private RideType type;
     private Integer numberOfSeats;
@@ -22,20 +21,12 @@ public class Ride extends BasicAuth {
         this.sourceType = sourceType;
     }
 
-    public Integer getSourceId() {
-        return sourceId;
+    public Integer getTechParkId() {
+        return techParkId;
     }
 
-    public void setSourceId(Integer sourceId) {
-        this.sourceId = sourceId;
-    }
-
-    public Integer getDestinationId() {
-        return destinationId;
-    }
-
-    public void setDestinationId(Integer destinationId) {
-        this.destinationId = destinationId;
+    public void setTechParkId(Integer techParkId) {
+        this.techParkId = techParkId;
     }
 
     public String getTimestamp() {
@@ -74,19 +65,19 @@ public class Ride extends BasicAuth {
             return false;
         }
         Ride ride = (Ride) o;
-        return Objects.equals(sourceType, ride.sourceType) && Objects.equals(sourceId, ride.sourceId) && Objects
-                .equals(destinationId, ride.destinationId) && Objects.equals(timestamp, ride.timestamp)
-                && type == ride.type && Objects.equals(numberOfSeats, ride.numberOfSeats);
+        return Objects.equals(sourceType, ride.sourceType) && Objects.equals(techParkId, ride.techParkId) && Objects
+                .equals(timestamp, ride.timestamp) && type == ride.type && Objects
+                .equals(numberOfSeats, ride.numberOfSeats);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), sourceType, sourceId, destinationId, timestamp, type, numberOfSeats);
+        return Objects.hash(super.hashCode(), sourceType, techParkId, timestamp, type, numberOfSeats);
     }
 
     @Override
     public String toString() {
-        return "Ride{" + "sourceType=" + sourceType + ", sourceId=" + sourceId + ", destinationId=" + destinationId
-                + ", timestamp='" + timestamp + '\'' + ", type=" + type + ", numberOfSeats=" + numberOfSeats + '}';
+        return "Ride{" + "sourceType=" + sourceType + ", techParkId=" + techParkId + ", timestamp='" + timestamp + '\''
+                + ", type=" + type + ", numberOfSeats=" + numberOfSeats + '}';
     }
 }

@@ -62,26 +62,17 @@ public class NormalUser {
     private String validateSrcAndDest(Ride ride) throws DBException {
         List<LocationModel> locationList = DBHelper.getLocationList();
 
-        LocationModel source = null;
-        LocationModel dest = null;
+        LocationModel techPark = null;
         for (LocationModel location : locationList) {
-            if (Objects.equals(ride.getSourceId(), location.getLocationId())) {
-                source = location;
-            } else if (Objects.equals(ride.getDestinationId(), location.getLocationId())) {
-                dest = location;
+            if (Objects.equals(ride.getTechParkId(), location.getLocationId())) {
+                techPark = location;
             }
         }
 
-        if (source == null || dest == null) {
-            return "Invalid source or destination";
-        }
-
-        if (!Objects.equals(source.getLocationType(), ride.getSourceType())) {
-            return "Invalid source type";
-        }
-
-        if (Objects.equals(dest.getLocationType(), source.getLocationType())) {
-            return "Source and destination type should be different";
+        // Validate that that the techParkId is a location
+        // and a techPark
+        if (techPark == null || (techPark.getLocationType() != LocationModel.TECH_PARK)) {
+            return "Invalid techPark";
         }
 
         return null;
@@ -101,13 +92,11 @@ public class NormalUser {
     }
 
     private String validateRideOffer(Ride ride) throws DBException {
-        if (ride.getSourceType() == null || ride.getSourceId() == null || ride.getDestinationId() == null
+        if (ride.getSourceType() == null || ride.getTechParkId() == null
                 || ride.getTimestamp() == null || ride.getType() == null || ride.getNumberOfSeats() == null) {
             return "Invalid values";
         }
-        if (!TokenChecker.validateUser(ride)) {
-            return "Invalid auth";
-        }
+
         String temp = validateSrcAndDest(ride);
         if (temp != null) {
             return temp;
@@ -123,13 +112,9 @@ public class NormalUser {
 
     private String validateRideTaking(Ride ride) throws DBException {
 
-        if (ride.getSourceType() == null || ride.getSourceId() == null || ride.getDestinationId() == null
+        if (ride.getSourceType() == null || ride.getTechParkId() == null
                 || ride.getTimestamp() == null || ride.getType() == null) {
             return "Invalid values";
-        }
-
-        if (!TokenChecker.validateUser(ride)) {
-            return "Invalid auth";
         }
 
         String temp = validateSrcAndDest(ride);
@@ -145,11 +130,18 @@ public class NormalUser {
         return null;
     }
 
-    private Boolean checkValidLocations(RideModel driver, Ride taker, List<LocationModel> llist) {
+    private Boolean checkValidLocations(RideModel driver, Ride taker, User rideUser, List<LocationModel> llist) {
         Integer dSrcId = driver.getSourceId();
         Integer dDestId = driver.getDestinationId();
-        Integer tSrcId = taker.getSourceId();
-        Integer tDestId = taker.getDestinationId();
+        Integer tSrcId;
+        Integer tDestId;
+        if (taker.getSourceType() == LocationModel.APARTMENT) {
+            tSrcId = rideUser.getApartmentId();
+            tDestId = taker.getTechParkId();
+        } else {
+            tSrcId = taker.getTechParkId();
+            tDestId = rideUser.getApartmentId();
+        }
 
         Integer dSrcDist = null, dDestDist = null, tSrcDist = null, tDestDist = null;
         for (LocationModel location : llist) {
@@ -209,8 +201,13 @@ public class NormalUser {
         Map<String, Object> map = new HashMap<>();
         List<RideModel> rides = DBHelper.getRides();
         List<LocationModel> locationList = DBHelper.getLocationList();
+        User user = DBHelper.getUser(ride.getUserId());
+        if (user == null) {
+            throw new DBException("Invalid userId");
+        }
+
         for (RideModel r : rides) {
-            if (!checkValidLocations(r, ride, locationList)) {
+            if (!checkValidLocations(r, ride, user, locationList)) {
                 continue;
             }
 
@@ -221,7 +218,7 @@ public class NormalUser {
             Integer available = DBHelper.getPassengerCount(r.getRideId());
             if (available < r.getNumberOfSeats()) {
                 // Done!
-                DBHelper.addPassenger(r.getRideId(), ride.getUserId());
+                DBHelper.addPassenger(r.getRideId(), ride.getUserId(), ride.getTechParkId());
 
                 map.put("result", "SUCCESS");
                 User u = DBHelper.getUser(r.getDriverUserId());
@@ -241,18 +238,27 @@ public class NormalUser {
         return map;
     }
 
+    private Map<String, Object> returnFailureMap(Object reason) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("result", "FAILURE");
+        map.put("message", reason);
+
+        return map;
+    }
+
     @RequestMapping(value = "/api/ride", method = RequestMethod.POST)
     public Map<String, Object> ride(@RequestBody Ride body) {
         Map<String, Object> map = new HashMap<>();
         try {
+            if (!TokenChecker.validateUser(body)) {
+                return returnFailureMap("Invalid auth");
+            }
             String ret;
             switch (body.getType()) {
                 case OFFER:
                     ret = validateRideOffer(body);
                     if (ret != null) {
-                        map.put("result", "FAILURE");
-                        map.put("message", ret);
-                        return map;
+                        return returnFailureMap(ret);
                     }
 
                     DBHelper.addRide(body);
@@ -262,20 +268,14 @@ public class NormalUser {
                 case TAKE:
                     ret = validateRideTaking(body);
                     if (ret != null) {
-                        map.put("result", "FAILURE");
-                        map.put("message", ret);
-                        return map;
+                        return returnFailureMap(ret);
                     }
                     return takeRide(body);
                 default:
-                    map.put("result", "FAILURE");
-                    map.put("message", "Wrong ride type");
-                    return map;
+                    return returnFailureMap("Wrong ride type");
             }
         } catch (DBException e) {
-            map.put("result", "FAILURE");
-            map.put("message", e.getMessage());
+            return returnFailureMap(e.getMessage());
         }
-        return map;
     }
 }
