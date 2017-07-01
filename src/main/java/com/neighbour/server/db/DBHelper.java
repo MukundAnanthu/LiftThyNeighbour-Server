@@ -1,8 +1,11 @@
 package com.neighbour.server.db;
 
 import com.neighbour.server.model.db.Admin;
+import com.neighbour.server.model.db.DriveDetails;
 import com.neighbour.server.model.db.LocationModel;
+import com.neighbour.server.model.db.Passenger;
 import com.neighbour.server.model.db.RideModel;
+import com.neighbour.server.model.db.RideTaker;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.Ride;
 import com.neighbour.server.model.rest.SignUp;
@@ -117,8 +120,8 @@ public class DBHelper {
     public static Integer addUser(SignUp user) throws DBException {
         try {
             String sqlString = "INSERT INTO user "
-                    + "(userName, password, apartmentId, flatNumber, contactNumber, email, vehicleNumber) "
-                    + "VALUES " + "(?, ?, ?, ?, ?, ?, ?);";
+                    + "(userName, password, apartmentId, flatNumber, contactNumber, email, vehicleNumber) " + "VALUES "
+                    + "(?, ?, ?, ?, ?, ?, ?);";
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setString(1, user.getUserName());
             stmt.setString(2, PasswordHelper.hashPassword(user.getPassword()));
@@ -223,7 +226,6 @@ public class DBHelper {
             stmt.setString(1, adminName);
             ResultSet rs = stmt.executeQuery();
 
-
             Boolean a = rs.next();
             if (!a) {
                 return null;
@@ -249,7 +251,6 @@ public class DBHelper {
             stmt.setInt(1, adminId);
             ResultSet rs = stmt.executeQuery();
 
-
             Boolean a = rs.next();
             if (!a) {
                 return null;
@@ -268,7 +269,7 @@ public class DBHelper {
 
     }
 
-    public static void updateToken(Integer userId, String token, UserType type) throws DBException{
+    public static void updateToken(Integer userId, String token, UserType type) throws DBException {
         try {
             String sqlString = "update user set token=? where userId=?;";
             if (type == UserType.ADMIN) {
@@ -366,8 +367,7 @@ public class DBHelper {
     public static void addRide(Ride ride) throws DBException {
         try {
             String sqlString = "INSERT INTO rideOffer "
-                    + "(driverUserId, sourceType, sourceId, destinationId, departureTime, numberOfSeats) "
-                    + "VALUES "
+                    + "(driverUserId, sourceType, sourceId, destinationId, departureTime, numberOfSeats) " + "VALUES "
                     + "(?, ?, ?, ?, ?, ?)";
 
             User user = DBHelper.getUser(ride.getUserId());
@@ -420,6 +420,34 @@ public class DBHelper {
         }
     }
 
+    public static RideModel getRide(Integer rideId) throws DBException {
+        try {
+            String sqlString = "SELECT * from rideOffer where finishedRide=0 and rideId=?;";
+            PreparedStatement stmt = getPreparedStatement(sqlString);
+            stmt.setInt(1, rideId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                RideModel ride = new RideModel();
+                ride.setRideId(rs.getInt("rideId"));
+                ride.setDriverUserId(rs.getInt("driverUserId"));
+                ride.setSourceType(rs.getInt("sourceType"));
+                ride.setSourceId(rs.getInt("sourceId"));
+                ride.setDestinationId(rs.getInt("destinationId"));
+                ride.setDepartureTime(rs.getString("departureTime"));
+                ride.setNumberOfSeats(rs.getInt("numberOfSeats"));
+                ride.setFinishedRide(rs.getInt("finishedRide"));
+                return ride;
+            } else {
+                throw new DBException("No ride with rideId=" + rideId);
+            }
+
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+
     public static Integer getPassengerCount(Integer rideId) throws DBException {
         try {
             String sqlString = "SELECT COUNT(*) as COUNT from rideTaker where rideId=?;";
@@ -438,10 +466,8 @@ public class DBHelper {
 
     public static void addPassenger(Integer rideId, Integer takerId, Integer techParkId) throws DBException {
         try {
-            String sqlString = "INSERT INTO rideTaker "
-                    + "(rideId, takerUserId, techParkId) "
-                    + "VALUES "
-                    + "(?, ?, ?)";
+            String sqlString =
+                    "INSERT INTO rideTaker " + "(rideId, takerUserId, techParkId) " + "VALUES " + "(?, ?, ?)";
 
             PreparedStatement stmt = getPreparedStatement(sqlString);
             stmt.setInt(1, rideId);
@@ -449,8 +475,150 @@ public class DBHelper {
             stmt.setInt(3, techParkId);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new DBException(e.getMessage());
+            throw new DBException(e);
         }
+    }
+
+    public static String getLocationName(Integer locationId) throws DBException {
+        try {
+            String sql = "SELECT locationName from location where locationId=? ;";
+            PreparedStatement stmt = getPreparedStatement(sql);
+            stmt.setInt(1, locationId);
+
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("locationName");
+            } else {
+                throw new DBException("No location with locationId=" + locationId);
+            }
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static DriveDetails getDriveDetail(Integer rideId) throws DBException {
+        DriveDetails details = new DriveDetails();
+        RideModel rideModel = getRide(rideId);
+        Integer driverId = rideModel.getDriverUserId();
+        User driver = getUser(driverId);
+        if (driver == null) {
+            throw new DBException("Unexpected driverId. User with that driverId doesn't exist");
+        }
+
+        details.setTimestamp(rideModel.getDepartureTime());
+        details.setDriverName(driver.getUserName());
+        details.setContactNumber(driver.getContactNumber());
+        details.setVehicleNumber(driver.getVehicleNumber());
+        details.setSrcName(getLocationName(rideModel.getSourceId()));
+        details.setDestinationName(getLocationName(rideModel.getDestinationId()));
+
+        // Passengers
+        List<RideTaker> list = getRideTakers(rideId);
+
+        for (RideTaker r : list) {
+            details.addPassenger(getPassenger(r, rideModel.getSourceType()));
+        }
+
+        return details;
+    }
+
+    public static Passenger getPassenger(RideTaker rt, Integer srcType) throws DBException {
+        Passenger p = new Passenger();
+        User pass = getUser(rt.getTakerUserId());
+        if (pass == null) {
+            throw new DBException("Invalid rideTakerId");
+        }
+
+        p.setUserName(pass.getUserName());
+        p.setContactNumber(pass.getContactNumber());
+        String techParkName = getLocationName(rt.getTechParkId());
+        String apartmentName = getLocationName(pass.getApartmentId());
+        if (srcType == LocationModel.APARTMENT) {
+            p.setSrcName(apartmentName);
+            p.setDestinationName(techParkName);
+        } else {
+            p.setSrcName(techParkName);
+            p.setDestinationName(apartmentName);
+        }
+
+        return p;
+    }
+
+    public static List<RideTaker> getRideTakers(Integer rideId) throws DBException {
+        try {
+            String sql = "SELECT * from rideTaker where rideId=? ;";
+            PreparedStatement stmt = getPreparedStatement(sql);
+            stmt.setInt(1, rideId);
+
+            ResultSet rs = stmt.executeQuery();
+            List<RideTaker> list = new ArrayList<>();
+            while (rs.next()) {
+                RideTaker rt = new RideTaker();
+                rt.setRideId(rideId);
+                rt.setTakerUserId(rs.getInt("takerUserId"));
+                rt.setTechParkId(rs.getInt("techParkId"));
+                list.add(rt);
+            }
+
+            return list;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static List<Integer> getOfferedRides(Integer userId) throws DBException {
+        try {
+            String sql = "SELECT rideId from rideOffer where driverUserId=? ;";
+            PreparedStatement stmt = getPreparedStatement(sql);
+            stmt.setInt(1, userId);
+            List<Integer> rideList = new ArrayList<>();
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Integer r = rs.getInt("rideId");
+                rideList.add(r);
+            }
+
+            return rideList;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+    }
+
+    public static List<Integer> getTakenRides(Integer userId) throws DBException {
+        try {
+            String sql = "SELECT rideId from rideTaker where takerUserId=? ;";
+            PreparedStatement stmt = getPreparedStatement(sql);
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            List<Integer> list = new ArrayList<>();
+            while (rs.next()) {
+                Integer r = rs.getInt("rideId");
+                list.add(r);
+            }
+
+            return list;
+        } catch (SQLException e) {
+            throw new DBException(e);
+        }
+
+    }
+
+    public static List<DriveDetails> getAllFutureRides(Integer userId) throws DBException {
+        List<Integer> fOfferedRides = getOfferedRides(userId);
+        List<Integer> fTakenRides = getTakenRides(userId);
+
+        List<DriveDetails> details = new ArrayList<>();
+
+        for (Integer ride : fOfferedRides) {
+            details.add(getDriveDetail(ride));
+        }
+
+        for (Integer ride : fTakenRides) {
+            details.add(getDriveDetail(ride));
+        }
+
+        return details;
     }
 
 }

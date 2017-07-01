@@ -1,9 +1,11 @@
 package com.neighbour.server.endpoint;
 
 import com.neighbour.server.db.DBHelper;
+import com.neighbour.server.model.db.DriveDetails;
 import com.neighbour.server.model.db.LocationModel;
 import com.neighbour.server.model.db.RideModel;
 import com.neighbour.server.model.db.User;
+import com.neighbour.server.model.rest.BasicAuth;
 import com.neighbour.server.model.rest.Ride;
 import com.neighbour.server.model.rest.SignUp;
 import com.neighbour.server.util.DBException;
@@ -278,4 +280,21 @@ public class NormalUser {
             return returnFailureMap(e.getMessage());
         }
     }
+
+    @RequestMapping(value = "/api/futureRides", method = RequestMethod.POST)
+    public Map<String, Object> futureRides(@RequestBody BasicAuth auth) {
+        try {
+            if (!TokenChecker.validateUser(auth)) {
+                return returnFailureMap("Invalid auth");
+            }
+
+            List<DriveDetails> list = DBHelper.getAllFutureRides(auth.getUserId());
+            Map<String, Object> map = new HashMap<>();
+            map.put("rideList", list);
+            return map;
+        } catch (DBException e) {
+            return returnFailureMap(e.getMessage());
+        }
+    }
+
 }
