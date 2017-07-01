@@ -288,10 +288,7 @@ public class NormalUser {
                 return returnFailureMap("Invalid auth");
             }
 
-            List<DriveDetails> list = DBHelper.getAllFutureRides(auth.getUserId());
-            Map<String, Object> map = new HashMap<>();
-            map.put("rideList", list);
-            return map;
+            return DBHelper.getAllFutureRides(auth.getUserId());
         } catch (DBException e) {
             return returnFailureMap(e.getMessage());
         }

@@ -20,7 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author ajithpandel
@@ -604,21 +606,27 @@ public class DBHelper {
 
     }
 
-    public static List<DriveDetails> getAllFutureRides(Integer userId) throws DBException {
+    public static Map<String, Object> getAllFutureRides(Integer userId) throws DBException {
+        Map<String, Object> map = new HashMap<>();
+
+        List<DriveDetails> Odetails = new ArrayList<>();
+
         List<Integer> fOfferedRides = getOfferedRides(userId);
-        List<Integer> fTakenRides = getTakenRides(userId);
-
-        List<DriveDetails> details = new ArrayList<>();
-
         for (Integer ride : fOfferedRides) {
-            details.add(getDriveDetail(ride));
+            Odetails.add(getDriveDetail(ride));
         }
 
+
+        List<DriveDetails> tdetails = new ArrayList<>();
+        List<Integer> fTakenRides = getTakenRides(userId);
         for (Integer ride : fTakenRides) {
-            details.add(getDriveDetail(ride));
+            tdetails.add(getDriveDetail(ride));
         }
 
-        return details;
+        map.put("ridesOffered", Odetails);
+        map.put("ridesTake", tdetails);
+
+        return map;
     }
 
 }
