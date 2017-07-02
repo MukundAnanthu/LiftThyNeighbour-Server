@@ -43,8 +43,8 @@ CREATE TABLE location (
 
 INSERT INTO location (locationName, locationType, distance) VALUES ("Apartment A", 1, 0);
 INSERT INTO location (locationName, locationType, distance) VALUES ("Apartment B", 1, 1);
-INSERT INTO location (locationName, locationType, distance) VALUES ("TechPark A", 0, 2);
-INSERT INTO location (locationName, locationType, distance) VALUES ("TechPark B", 0, 3);
+INSERT INTO location (locationName, locationType, distance) VALUES ("Bhagmane", 0, 3);
+INSERT INTO location (locationName, locationType, distance) VALUES ("RMZ Eco World", 0, 6);
 CREATE TABLE `rideOffer`
 (
 	`rideId` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
