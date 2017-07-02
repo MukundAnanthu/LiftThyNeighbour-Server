@@ -13,6 +13,42 @@ make build-docker
 make run-docker
 ```
 
+## Sample data Information
+* All users have password as `pass`
+
+### Normal Users
+
+| User Name | Apartment Name |
+|-----------|----------------|
+| normal1   | Ivory Heights  |
+| normal2   | Durga Petals   |
+| ajith     | Ivory Heights  |
+| mukund    | Ivory Heights  |
+| charan    | Durga Petals   |
+| deekshith | Durga Petals   |
+
+### Admin users
+* All users have password as `pass`
+
+| User Name | Apartment Name |
+|-----------|----------------|
+| admin1    | Ivory Heights  |
+| admin2    | Durga Petals   |
+| admin3    | Ivory Heights  |
+| admin4    | Durga Petals   |
+
+
+### Locations
+| Location Name | Location Type |
+|---------------|---------------|
+| Ivory Heights | Apartment     |
+| Durga Petals  | Apartment     |
+| Bhagmane      | Tech Park     |
+| RMZ Eco World | Tech Park     |
+
+Assumption is that the order of locations in a path are
+
+`Ivory Heights -> Bhagmane -> Durga Petals -> RMZ Eco World`
 ## Docs
 * Initial db seed data in `data/data.sql`
 * We use docker to host our server
