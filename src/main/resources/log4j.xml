@@ -14,7 +14,7 @@
   </logger>
 
   <root>
-    <priority value ="error" />
+    <priority value ="debug" />
     <appender-ref ref="simpleLog" />
   </root>
 

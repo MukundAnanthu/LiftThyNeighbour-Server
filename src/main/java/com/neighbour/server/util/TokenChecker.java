@@ -55,6 +55,10 @@ public class TokenChecker {
             }
         }
 
+        if (token == null) {
+            return Boolean.FALSE;
+        }
+
         if (PasswordHelper.checkPassword(auth.getToken(), token)) {
             return Boolean.TRUE;
         } else {
