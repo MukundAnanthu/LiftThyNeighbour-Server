@@ -11,6 +11,7 @@ import com.neighbour.server.util.TokenChecker;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class AdminEndpoint {
+    private static final Logger logger = Logger.getLogger(AdminEndpoint.class);
 
     @RequestMapping(value = "/api/getTenants", method = RequestMethod.POST)
     public Map<String, Object> getTenants(@RequestBody Map<String, Object> body) {
@@ -57,6 +59,7 @@ public class AdminEndpoint {
         String token = (String)body.get("token");
         if (userId == null || token == null) {
             map.put("message", "userId or token is missing");
+            logger.debug(map);
             return map;
         }
 
@@ -69,9 +72,11 @@ public class AdminEndpoint {
             }
             List<Tenant> list = DBHelper.getTenants(userId, true);
             map.put("pendingList", list);
+            logger.debug(map);
             return map;
         } catch (DBException e) {
             map.put("message", e.getMessage());
+            logger.debug(e);
             return map;
         }
     }
@@ -117,6 +122,7 @@ public class AdminEndpoint {
             map.put("message", "Operation completed successfully");
         } catch (DBException e) {
 
+            logger.debug(e);
             map.put("message", e.getMessage());
         }
 
@@ -139,6 +145,7 @@ public class AdminEndpoint {
             map.put("result", "FAILURE");
             map.put("message", e.getMessage());
         }
+        logger.debug(map);
         return map;
     }
 

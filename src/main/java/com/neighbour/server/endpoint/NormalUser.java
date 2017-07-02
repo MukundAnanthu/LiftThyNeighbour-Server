@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.log4j.Logger;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,13 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class NormalUser {
 
-    @RequestMapping(value = "/api/testing", method = RequestMethod.POST)
-    public Map<String, Object> testing(@RequestHeader("token") String token, @RequestBody Map<String, Object> body) {
-        Map<String, Object> map = new HashMap<>();
-        map.putAll(body);
-        map.put("token", token);
-        return map;
-    }
+    private static final Logger logger = Logger.getLogger(NormalUser.class);
 
     @RequestMapping(value = "/api/signup", method = RequestMethod.POST)
     public Map<String, Object> signup(@RequestBody SignUp body) {
@@ -54,10 +49,12 @@ public class NormalUser {
                 map.put("message", "userName or contactNumber already taken");
             }
         } catch (DBException e) {
+            logger.debug(e);
             map.put("result", "FAILURE");
             map.put("message", e.getMessage());
         }
 
+        logger.debug(map);
         return map;
     }
 
@@ -245,6 +242,8 @@ public class NormalUser {
         map.put("result", "FAILURE");
         map.put("message", reason);
 
+        logger.debug(map);
+
         return map;
     }
 
@@ -277,6 +276,7 @@ public class NormalUser {
                     return returnFailureMap("Wrong ride type");
             }
         } catch (DBException e) {
+            logger.debug(e);
             return returnFailureMap(e.getMessage());
         }
     }
@@ -290,6 +290,7 @@ public class NormalUser {
 
             return DBHelper.getAllFutureRides(auth.getUserId());
         } catch (DBException e) {
+            logger.debug(e);
             return returnFailureMap(e.getMessage());
         }
     }
