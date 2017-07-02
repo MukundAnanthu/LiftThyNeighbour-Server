@@ -103,6 +103,10 @@ public class NormalUser {
         }
         temp = validateTime(ride.getTimestamp());
 
+        if (temp != null) {
+            return temp;
+        }
+
         if (ride.getNumberOfSeats() < 1 || ride.getNumberOfSeats() > 20) {
             return "Invalid number of seats";
         }
