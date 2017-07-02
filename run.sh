@@ -1,7 +1,16 @@
 #!/bin/bash
-export PASS=adminadmin
+export PASS=waetiakahwoph6re9zeeZeish4eip3ae
 export HOST=mysql
-docker run -d --name=neighbourdb -e MYSQL_ROOT_PASSWORD=$PASS -v ${PWD}/data:/docker-entrypoint-initdb.d/ mysql
+
+SERVER_DATA_DIR="${PWD}/serverdata"
+mkdir -p "${SERVER_DATA_DIR}"
+
+docker run -d \
+--name=neighbourdb \
+-e MYSQL_ROOT_PASSWORD=$PASS \
+-v ${PWD}/data:/docker-entrypoint-initdb.d/ \
+-v ${SERVER_DATA_DIR}:/var/lib/mysql \
+mysql
 
 docker run -d \
 -e DBHOST=$HOST \
