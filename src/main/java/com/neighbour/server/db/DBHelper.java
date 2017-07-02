@@ -19,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -613,6 +614,9 @@ public class DBHelper {
 
         List<Integer> fOfferedRides = getOfferedRides(userId);
         for (Integer ride : fOfferedRides) {
+            if (skipOldRide(ride)) {
+                continue;
+            }
             Odetails.add(getDriveDetail(ride));
         }
 
@@ -620,6 +624,9 @@ public class DBHelper {
         List<DriveDetails> tdetails = new ArrayList<>();
         List<Integer> fTakenRides = getTakenRides(userId);
         for (Integer ride : fTakenRides) {
+            if (skipOldRide(ride)) {
+                continue;
+            }
             tdetails.add(getDriveDetail(ride));
         }
 
@@ -627,6 +634,14 @@ public class DBHelper {
         map.put("ridesTake", tdetails);
 
         return map;
+    }
+
+    private static boolean skipOldRide(Integer ride) throws DBException {
+        RideModel r = getRide(ride);
+        Long dTime = Long.valueOf(r.getDepartureTime());
+        Long now = Instant.now().getEpochSecond();
+
+        return now - dTime >= 60 * 60L;
     }
 
 }
