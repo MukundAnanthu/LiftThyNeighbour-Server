@@ -1,4 +1,4 @@
-# KnowThyNeighbour-Server
+# LiftThyNeighbour-Server
 ## Prerequisites
 * Install [Docker](https://docs.docker.com/engine/installation/)
 
