@@ -4,6 +4,7 @@ import com.neighbour.server.db.DBHelper;
 import com.neighbour.server.model.db.DriveDetails;
 import com.neighbour.server.model.db.LocationModel;
 import com.neighbour.server.model.db.RideModel;
+import com.neighbour.server.model.db.RideTaker;
 import com.neighbour.server.model.db.User;
 import com.neighbour.server.model.rest.BasicAuth;
 import com.neighbour.server.model.rest.Ride;
@@ -206,6 +207,10 @@ public class NormalUser {
         }
 
         for (RideModel r : rides) {
+            if (r.getDriverUserId() == ride.getUserId()) {
+                // Don't take the ride I offered!
+                continue;
+            }
             if (!checkValidLocations(r, ride, user, locationList)) {
                 continue;
             }
@@ -216,7 +221,19 @@ public class NormalUser {
 
             Integer available = DBHelper.getPassengerCount(r.getRideId());
             if (available < r.getNumberOfSeats()) {
-                // Done!
+                List<RideTaker> rideTakers = DBHelper.getRideTakers(r.getRideId());
+                Boolean alreadyTaken = Boolean.FALSE;
+                for (RideTaker rideTaker : rideTakers) {
+                    if (rideTaker.getTakerUserId() == ride.getUserId()) {
+                        // Already took this ride
+                        alreadyTaken = Boolean.TRUE;
+                        break;
+                    }
+                }
+
+                if (alreadyTaken) {
+                    continue;
+                }
                 DBHelper.addPassenger(r.getRideId(), ride.getUserId(), ride.getTechParkId());
 
                 map.put("result", "SUCCESS");
