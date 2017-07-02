@@ -8,11 +8,6 @@
     </layout>
   </appender>
 
-  <logger name="com.neighbour.server" additivity="false">
-    <level value="debug" />
-    <appender-ref ref="simpleLog" />
-  </logger>
-
   <root>
     <priority value ="debug" />
     <appender-ref ref="simpleLog" />

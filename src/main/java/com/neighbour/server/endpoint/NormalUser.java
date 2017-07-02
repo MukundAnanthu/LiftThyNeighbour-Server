@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class NormalUser {
 
-    private static final Logger logger = Logger.getLogger(NormalUser.class);
+    private static final Logger logger = Logger.getLogger(NormalUser.class.getName());
 
     @RequestMapping(value = "/api/signup", method = RequestMethod.POST)
     public Map<String, Object> signup(@RequestBody SignUp body) {
@@ -49,12 +49,12 @@ public class NormalUser {
                 map.put("message", "userName or contactNumber already taken");
             }
         } catch (DBException e) {
-            logger.debug(e);
+            logger.info(e);
             map.put("result", "FAILURE");
             map.put("message", e.getMessage());
         }
 
-        logger.debug(map);
+        logger.info(map);
         return map;
     }
 
@@ -242,7 +242,7 @@ public class NormalUser {
         map.put("result", "FAILURE");
         map.put("message", reason);
 
-        logger.debug(map);
+        logger.info(map);
 
         return map;
     }
@@ -276,7 +276,7 @@ public class NormalUser {
                     return returnFailureMap("Wrong ride type");
             }
         } catch (DBException e) {
-            logger.debug(e);
+            logger.info(e);
             return returnFailureMap(e.getMessage());
         }
     }
@@ -290,7 +290,7 @@ public class NormalUser {
 
             return DBHelper.getAllFutureRides(auth.getUserId());
         } catch (DBException e) {
-            logger.debug(e);
+            logger.info(e);
             return returnFailureMap(e.getMessage());
         }
     }

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class AdminEndpoint {
-    private static final Logger logger = Logger.getLogger(AdminEndpoint.class);
+    private static final Logger logger = Logger.getLogger(AdminEndpoint.class.getName());
 
     @RequestMapping(value = "/api/getTenants", method = RequestMethod.POST)
     public Map<String, Object> getTenants(@RequestBody Map<String, Object> body) {
@@ -59,7 +59,7 @@ public class AdminEndpoint {
         String token = (String)body.get("token");
         if (userId == null || token == null) {
             map.put("message", "userId or token is missing");
-            logger.debug(map);
+            logger.info(map);
             return map;
         }
 
@@ -72,11 +72,11 @@ public class AdminEndpoint {
             }
             List<Tenant> list = DBHelper.getTenants(userId, true);
             map.put("pendingList", list);
-            logger.debug(map);
+            logger.info(map);
             return map;
         } catch (DBException e) {
             map.put("message", e.getMessage());
-            logger.debug(e);
+            logger.info(e);
             return map;
         }
     }
@@ -122,7 +122,7 @@ public class AdminEndpoint {
             map.put("message", "Operation completed successfully");
         } catch (DBException e) {
 
-            logger.debug(e);
+            logger.info(e);
             map.put("message", e.getMessage());
         }
 
@@ -145,7 +145,7 @@ public class AdminEndpoint {
             map.put("result", "FAILURE");
             map.put("message", e.getMessage());
         }
-        logger.debug(map);
+        logger.info(map);
         return map;
     }
 
